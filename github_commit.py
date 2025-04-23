@@ -8,7 +8,7 @@ since = now - timedelta(hours=24)
 
 owner = "emanalytic"
 repo = "AutoStand-UP-Agent"
-token = "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"
+token = "..."
 
 url = f"https://api.github.com/repos/{owner}/{repo}/commits"
 headers = {"Authorization": f"token {token}"}
