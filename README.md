@@ -1,5 +1,5 @@
 # AutoStand-UP-Agent
-
+```mermaid
 flowchart TD
     A[Scheduled Trigger - Cron, GitHub Action, Lambda] --> B[Auth & Setup]
     
@@ -28,4 +28,4 @@ flowchart TD
     I --> I1[Use Webhook or Bot to send to channel]
 
     I1 --> Z[Done! Daily stand-up delivered]
-
+```
