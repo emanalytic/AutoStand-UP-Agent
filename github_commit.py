@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-def get_recent_commits(owner, repo, hours=84, debug=False):
+def get_recent_commits(owner, repo, hours=24, debug=False):
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         raise ValueError("GITHUB_TOKEN not found in environment variables")
@@ -42,14 +42,12 @@ def get_recent_commits(owner, repo, hours=84, debug=False):
             structured_commits.append({
                 "user": author_info.get("login") or commit_author.get("name", "unknown"),
                 "message": commit_data.get("message", "").strip(),
-                "timestamp": commit_author.get("date"),
-                "url": commit.get("html_url"),
                 "repo": repo
             })
 
         if debug:
             for c in structured_commits:
-                print(f"[{c['user']}] {c['timestamp']} → {c['message']}")
+                print(f"[{c['user']}] → {c['message']}")
 
         return structured_commits
 
