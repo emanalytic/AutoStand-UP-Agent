@@ -3,7 +3,6 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 def get_recent_commits(owner, repo, hours=24, debug=False):
@@ -59,11 +58,11 @@ def get_recent_commits(owner, repo, hours=24, debug=False):
         print(f"[Exception] Failed to fetch commits: {e}")
 
     # PR URL
-    pr_url = f"https://api.github.com/repos/{owner}/{repo}/pulls"
+    # PRs from Issues API (because PRs are issues too)
+    pr_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
     pr_params = {
-        "state": "all",  # You can also use 'open', 'closed', or 'merged' if you want to filter
         "since": since.isoformat(),
-        "until": now.isoformat(),
+        "state": "all",
         "per_page": 100
     }
 
@@ -75,24 +74,21 @@ def get_recent_commits(owner, repo, hours=24, debug=False):
             print(f"[Error] GitHub API returned {response.status_code}: {response.text}")
             return []
 
-        raw_prs = response.json()
-        if not raw_prs:
-            print("[Info] No PRs found in the given time range.")
+        raw_items = response.json()
+        if not raw_items:
+            print("[Info] No issues or PRs found in the given time range.")
 
-        for pr in raw_prs:
-            pr_data = pr.get("pull_request", {})
-            pr_user = pr.get("user", {})
-            pr_state = pr_data.get("state", "unknown")
-            pr_timestamp = pr_data.get("created_at", "unknown")
-
-            prs.append({
-                "user": pr_user.get("login", "unknown"),
-                "title": pr_data.get("title", "").strip(),
-                "state": pr_state,
-                "timestamp": pr_timestamp,
-                "url": pr_data.get("html_url"),
-                "repo": repo
-            })
+        for item in raw_items:
+            # Only include actual PRs
+            if "pull_request" in item:
+                prs.append({
+                    "user": item.get("user", {}).get("login", "unknown"),
+                    "title": item.get("title", "").strip(),
+                    "state": item.get("state", "unknown"),
+                    "timestamp": item.get("created_at", "unknown"),
+                    "url": item.get("html_url"),
+                    "repo": repo
+                })
 
         if debug:
             for pr in prs:
@@ -101,7 +97,6 @@ def get_recent_commits(owner, repo, hours=24, debug=False):
     except Exception as e:
         print(f"[Exception] Failed to fetch PRs: {e}")
 
-    return {"commits": commits, "prs": prs}
 
 
 
@@ -111,15 +106,4 @@ repo = "AutoStand-UP-Agent"
 # Fetch commits and PRs in the last 24 hours
 result = get_recent_commits(owner, repo, hours=84, debug=True)
 
-# Now `result` contains two lists: commits and prs
-commits = result['commits']
-prs = result['prs']
 
-# Example: Print the results
-print("\nCommits:")
-for c in commits:
-    print(f"[{c['user']}] {c['timestamp']} → {c['message']}")
-
-print("\nPRs:")
-for pr in prs:
-    print(f"[{pr['user']}] {pr['state'].capitalize()} PR: {pr['title']} at {pr['timestamp']}")
