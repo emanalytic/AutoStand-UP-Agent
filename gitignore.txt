@@ -1,0 +1,109 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+bower_components/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output directories
+dist/
+build/
+out/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE and editor specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Python files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+.eggs/
+*.whl
+*.virtualenv
+*.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Java files
+*.class
+*.jar
+*.war
+*.ear
+
+# Ruby files
+*.gem
+*.rbc
+.bundle/
+.config/
+.yardoc
+_rspec
+.rspec_status
+.ruby-version
+.ruby-gemset
+
+# JavaScript files
+*.min.js
+*.map
+
+# Miscellaneous
+*.swp
+*.lock
+*.bak
+*.tmp
+*.temp
+*.old
+*.orig
+*.rej
+*.swo
+*.log
+*.gz
+*.zip
+
+# Application-specific files
+# Add here files that are specific to your application or framework
+# E.g., for Django:
+# *.sqlite3
+# *.pot
+# *.mo
+
+# Coverage files
+coverage/
+*.lcov
+.nyc_output/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.envrc
