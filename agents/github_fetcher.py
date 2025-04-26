@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def fetch_github_activity(owner, repo, hours=24, debug=False):
+def fetch_github_activity(owner, repo, hours=84, debug=False):
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         raise ValueError("GITHUB_TOKEN not found in environment variables")
@@ -97,4 +97,5 @@ def github_fetcher_node(state):
     activities_by_user = fetch_github_activity(owner, repo, hours)
 
     return {"github_activity": activities_by_user}
+
 

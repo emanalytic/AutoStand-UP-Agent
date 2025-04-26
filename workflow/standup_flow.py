@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph
-from github_fetcher import github_fetcher_node
+from agents.github_fetcher import github_fetcher_node
 from typing import TypedDict, List
 
 class StandupState(TypedDict):
