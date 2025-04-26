@@ -92,9 +92,11 @@ def fetch_github_activity(owner, repo, hours=24, debug=False):
 def github_fetcher_node(state):
     owner = state["owner"]
     repo = state["repo"]
-    hours = state.get("hours", 24)
+    hours = state.get("hours", 24)  # default to 24 if not given
 
+    # Call your actual logic
     activities_by_user = fetch_github_activity(owner, repo, hours)
 
+    # Return in a way that LangGraph expects (update state)
     return {"github_activity": activities_by_user}
 
