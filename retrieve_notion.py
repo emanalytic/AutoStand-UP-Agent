@@ -16,41 +16,42 @@ DATABASE_ID = os.getenv("DATABASE_ID")
 # Initialize Notion client
 client = Client(auth=NOTION_TOKEN)
 
-def fetch_recent_tasks(database_id, hours_ago=1):
+def fetch_database_items(database_id):
+    response = client.databases.query(database_id=database_id)
+    return response["results"]
 
-    time_ago = (datetime.datetime.utcnow() - datetime.timedelta(hours=hours_ago)).isoformat()
-    response = client.databases.query(
-        database_id=database_id,
-        filter={
-            "timestamp": "last_edited_time",
-            "last_edited_time": {
-                "after": time_ago
-            }
-        }
-    )
-    return response.get("results", [])
+data = fetch_database_items(DATABASE_ID)
+tasks = []
 
-def parse_tasks(data):
-    tasks = []
-    for page in data:
-        properties = page["properties"]
+for page in data:
+    properties = page["properties"]
 
-        name_property = properties.get("First Name", {})
-        first_name = name_property.get("title", [{}])[0].get("text", {}).get("content", "No Name")
+    task_property = properties["Task Name"]
+    task_name = task_property["rich_text"][0]["text"]["content"] if task_property["rich_text"] else "No Task"
 
-        status_property = properties.get("Status", {})
-        status = status_property.get("status", {}).get("name", "No Status")
 
-        due_date_property = properties.get("Due date", {})
-        due_date = due_date_property.get("date", {}).get("start", "No Due Date")
+    name_property = properties["Assignee"]
+    assignee = name_property["title"][0]["text"]["content"] if name_property["title"] else "No Assignee"
 
-        task = {
-            "First Name": first_name,
-            "Status": status,
-            "Due Date": due_date
-        }
-        tasks.append(task)
-    return tasks
+    status_property = properties["Status"]
+    status = status_property["status"]["name"] if status_property["status"] else "No Status"
+
+    due_date_property = properties["Due date"]
+    due_date = due_date_property["date"]["start"] if due_date_property["date"] else "No Due Date"
+
+    last_edited = page.get("last_edited_time", "No Last Edit")
+
+
+    task = {
+        "Task Name": task_name,
+        "Assignee": assignee,
+        "Status": status,
+        "Due Date": due_date,
+        "Last edited" : last_edited
+    }
+    tasks.append(task)
+
+print(json.dumps(tasks, indent=4))
 
 def save_tasks_to_json(tasks, filename='db.json'):
    
@@ -58,8 +59,7 @@ def save_tasks_to_json(tasks, filename='db.json'):
         json.dump(tasks, f, indent=4)
 
 def main():
-    data = fetch_recent_tasks(DATABASE_ID, hours_ago=1)  
-    tasks = parse_tasks(data)
+    
     save_tasks_to_json(tasks)
 
 if __name__ == "__main__":
