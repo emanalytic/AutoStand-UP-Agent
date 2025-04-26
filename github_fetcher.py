@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_recent_commits(owner, repo, hours=24, debug=False):
+def fetch_github_activity(owner, repo, hours=24, debug=False):
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         raise ValueError("GITHUB_TOKEN not found in environment variables")
@@ -13,34 +13,24 @@ def get_recent_commits(owner, repo, hours=24, debug=False):
     now = datetime.now(timezone.utc)
     since = now - timedelta(hours=hours)
 
-    # Commit URL
-    commit_url = f"https://api.github.com/repos/{owner}/{repo}/commits"
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.v3+json"
     }
-    params = {
-        "since": since.isoformat(),
-        "until": now.isoformat(),
-        "per_page": 100
-    }
 
-    # Fetch commits
+    # Fetch Commits
     commits = []
     try:
+        commit_url = f"https://api.github.com/repos/{owner}/{repo}/commits"
+        params = {"since": since.isoformat(), "until": now.isoformat(), "per_page": 100}
         response = requests.get(commit_url, headers=headers, params=params)
-        if response.status_code != 200:
-            print(f"[Error] GitHub API returned {response.status_code}: {response.text}")
-            return []
-
+        response.raise_for_status()
         raw_commits = response.json()
-        if not raw_commits:
-            print("[Info] No commits found in the given time range.")
-        
+
         for commit in raw_commits:
             commit_data = commit.get("commit", {})
-            author_info = commit.get("author", {})
-            commit_author = commit_data.get("author", {})
+            author_info = commit.get("author", {}) or {}
+            commit_author = commit_data.get("author", {}) or {}
 
             commits.append({
                 "user": author_info.get("login") or commit_author.get("name", "unknown"),
@@ -50,36 +40,19 @@ def get_recent_commits(owner, repo, hours=24, debug=False):
                 "repo": repo
             })
 
-        if debug:
-            for c in commits:
-                print(f"[{c['user']}] {c['timestamp']} → {c['message']}")
-
     except Exception as e:
         print(f"[Exception] Failed to fetch commits: {e}")
-
-    # PR URL
-    # PRs from Issues API (because PRs are issues too)
-    pr_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
-    pr_params = {
-        "since": since.isoformat(),
-        "state": "all",
-        "per_page": 100
-    }
 
     # Fetch PRs
     prs = []
     try:
+        pr_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+        pr_params = {"since": since.isoformat(), "state": "all", "per_page": 100}
         response = requests.get(pr_url, headers=headers, params=pr_params)
-        if response.status_code != 200:
-            print(f"[Error] GitHub API returned {response.status_code}: {response.text}")
-            return []
-
+        response.raise_for_status()
         raw_items = response.json()
-        if not raw_items:
-            print("[Info] No issues or PRs found in the given time range.")
 
         for item in raw_items:
-            # Only include actual PRs
             if "pull_request" in item:
                 prs.append({
                     "user": item.get("user", {}).get("login", "unknown"),
@@ -90,20 +63,40 @@ def get_recent_commits(owner, repo, hours=24, debug=False):
                     "repo": repo
                 })
 
-        if debug:
-            for pr in prs:
-                print(f"[{pr['user']}] {pr['state'].capitalize()} PR: {pr['title']} at {pr['timestamp']}")
-
     except Exception as e:
         print(f"[Exception] Failed to fetch PRs: {e}")
 
+    # 🧠 Group By User
+    activities_by_user = {}
 
+    for commit in commits:
+        user = commit["user"]
+        activities_by_user.setdefault(user, {"commits": [], "prs": []})
+        activities_by_user[user]["commits"].append(commit)
 
+    for pr in prs:
+        user = pr["user"]
+        activities_by_user.setdefault(user, {"commits": [], "prs": []})
+        activities_by_user[user]["prs"].append(pr)
 
-owner = "emanalytic"
-repo = "AutoStand-UP-Agent"
+    if debug:
+        for user, activities in activities_by_user.items():
+            print(f"\n👤 User: {user}")
+            for c in activities["commits"]:
+                print(f"  - [Commit] {c['message']} ({c['timestamp']})")
+            for p in activities["prs"]:
+                print(f"  - [PR-{p['state'].capitalize()}] {p['title']} ({p['timestamp']})")
 
-# Fetch commits and PRs in the last 24 hours
-result = get_recent_commits(owner, repo, hours=84, debug=True)
+    return activities_by_user
 
+def github_fetcher_node(state):
+    owner = state["owner"]
+    repo = state["repo"]
+    hours = state.get("hours", 24)  # default to 24 if not given
+
+    # Call your actual logic
+    activities_by_user = fetch_github_activity(owner, repo, hours)
+
+    # Return in a way that LangGraph expects (update state)
+    return {"github_activity": activities_by_user}
 
