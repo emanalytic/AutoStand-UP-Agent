@@ -27,7 +27,7 @@ class GitHubFetcher:
         now = datetime.now(timezone.utc)
         since = now - timedelta(hours=self.hours)
 
-        commits = self._fetch_commits(self.owner, self.repo, since, now)
+        commits = self._fetch_commits(since, now)
         prs = self._fetch_pull_requests(self.owner, self.repo, since)
 
         activities_by_user = self._group_activities(commits, prs)
@@ -99,3 +99,4 @@ class GitHubFetcher:
             }
 
         return activities
+
