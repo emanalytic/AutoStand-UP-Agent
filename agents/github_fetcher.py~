@@ -98,8 +98,15 @@ class GitHubFetcher:
             }
 
         return simplified_activities
-#
-# if __name__ == "__main__":
-#     github_fetcher = GitHubFetcher()
-#     activities = github_fetcher.fetch_activity("emanalytic", "AutoStand-UP-Agent", hours=24)
 
+# Example Usage:
+if __name__ == "__main__":
+    # Replace with actual GitHub repo owner and name
+    github_fetcher = GitHubFetcher()
+    activities = github_fetcher.fetch_activity("emanalytic", "AutoStand-UP-Agent", hours=24)
+    print(activities)
+    # # Output the simplified activities by user
+    # for user, activities_summary in activities.items():
+    #     print(f"User: {user}")
+    #     print(f"Commits:\n{activities_summary['commits']}")
+    #     print(f"Pull Requests:\n{activities_summary['prs']}\n")

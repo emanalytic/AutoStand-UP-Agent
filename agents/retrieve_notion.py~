@@ -1,11 +1,8 @@
-from dotenv import load_dotenv
-import os
-import datetime
 import json
 import os
+from dotenv import load_dotenv
 from notion_client import Client
 
-# Load .env file
 load_dotenv()
 
 # Access environment variables
@@ -13,7 +10,6 @@ NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 DATABASE_ID = os.getenv("DATABASE_ID")
 
 
-# Initialize Notion client
 client = Client(auth=NOTION_TOKEN)
 
 def fetch_database_items(database_id):
