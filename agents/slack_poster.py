@@ -44,13 +44,45 @@ class SlackPoster:
         return standup_report
 
     def format_standup(self, standup_report: Dict) -> str:
-        messages = [
-            {"role": "system",
-             "content": "You are an assistant that formats daily standup updates for Slack. Keep it clean, concise, and easy to read. Provide a summary of each person’s activity, and avoid excessive repetition. Focus on tasks and key contributions."},
-            {"role": "user",
-             "content": f"Input JSON: {standup_report}\nReturn a Slack markdown in a simple, friendly, and clean format without too many headings or bullet points. Focus on the activity of each person. Make it conversational and concise."}
-        ]
-
+      member_info = {
+      "Eman":    {"github": "emanalytic",    "slack_id": "U08PZ74CXQT"},
+      "Maryam":  {"github": "Maryam-Sikander",  "slack_id": "U08PGDU7KGS"},
+      "John" : {"github": "justbuilding",  "slack_id": "U08PZJPGX8B"}
+      
+  }
+      messages = [
+    {
+        "role": "system",
+        "content": (
+            "You are an assistant that formats daily standup updates for Slack."
+            "Keep it clean, concise, and easy to read. Provide a summary of each person’s activity, and avoid excessive repetition."
+            "Focus on tasks and key contributions."
+            "Use only Slack markdown: bold with *asterisks*, italics with _underscores_, "
+            "bullet points (•), and section headers. "
+            "When referring to a member, look up their slack_id in member_info and mention them as <@SLACK_ID>. "
+            "If you person name exist on Notion or GitHub but not found slack id then just mention their name with updates. "
+            "Do not add any extra introduction or LLM-style preamble—start immediately with the report."
+        )
+    },
+    {
+        "role": "user",
+        "content": (
+            f"member_info = {json.dumps(member_info)}\n\n"
+            f"Input JSON = {standup_report}\n"
+            "Generate a single Slack message with this exact structure:\n\n"
+            "*Daily Stand-up Report*\n"
+            "For each member in the order given:\n"
+            "  * <@SLACK_ID>\n"
+            "Return a Slack markdown in a simple, friendly, and clean format without too many headings or bullet points."
+            "Focus on the activity of each person. Make it conversational and concise."
+            "Ensure:\n"
+            "- You replace each name with its `<@SLACK_ID>` mention.\n"
+            "- You use exactly one section header.\n"
+            "- You use bold for labels (e.g. *Done Yesterday:*), italics for dates/status.\n"
+            "- No extra lines, no “Here is” or “Below” or any LLM framing—only the report itself."
+        )
+    }
+]
         retry_attempts = 3
         for attempt in range(retry_attempts):
             try:
