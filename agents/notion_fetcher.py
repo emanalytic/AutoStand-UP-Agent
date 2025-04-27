@@ -57,7 +57,3 @@ class NotionFetcher:
         return tasks
 
 
-# Testing
-notion_fetcher = NotionFetcher()
-tasks = notion_fetcher.fetch_tasks()
-print(tasks)

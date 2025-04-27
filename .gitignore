@@ -108,3 +108,4 @@ coverage/
 .env.local
 .env.*.local
 .envrc
+*~

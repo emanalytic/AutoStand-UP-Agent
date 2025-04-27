@@ -3,9 +3,14 @@ from typing import List, Dict
 from datetime import datetime, timedelta, timezone
 import requests
 from dotenv import load_dotenv
+from config import Config
+
+config = Config()
+owner = config.get('settings', 'owner')
+repo = config.get('settings', 'repo')
+hours = int(config.get('settings', 'hours'))
 
 load_dotenv()
-
 
 class GitHubFetcher:
     def __init__(self, token: str = None):
@@ -18,7 +23,7 @@ class GitHubFetcher:
             "Accept": "application/vnd.github.v3+json"
         }
 
-    def fetch_activity(self, owner: str, repo: str, hours: int = 24, debug: bool = False) -> Dict[str, Dict[str, str]]:
+    def fetch_activity(self) -> Dict[str, Dict[str, str]]:
         """Fetch commits and PRs from GitHub repository."""
         now = datetime.now(timezone.utc)
         since = now - timedelta(hours=hours)
@@ -98,8 +103,3 @@ class GitHubFetcher:
             }
 
         return simplified_activities
-#
-# if __name__ == "__main__":
-#     github_fetcher = GitHubFetcher()
-#     activities = github_fetcher.fetch_activity("emanalytic", "AutoStand-UP-Agent", hours=24)
-
