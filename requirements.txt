@@ -1,0 +1,6 @@
+notion-client
+requests
+python-dotenv
+langgraph
+slack-sdk
+groq
