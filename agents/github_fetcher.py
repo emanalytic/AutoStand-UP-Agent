@@ -6,15 +6,14 @@ from dotenv import load_dotenv
 from config import Config
 
 config = Config()
-owner = config.get('settings', 'owner')
-repo = config.get('settings', 'repo')
-hours = int(config.get('settings', 'hours'))
-
 load_dotenv()
 
 class GitHubFetcher:
     def __init__(self, token: str = None):
         self.token = token or os.getenv("GITHUB_TOKEN")
+        self.owner = config.get('settings', 'owner')
+        self.repo = config.get('settings', 'repo')
+        self.hours = int(config.get('settings', 'hours'))
         if not self.token:
             raise ValueError("GITHUB_TOKEN not found in environment variables")
 
@@ -26,17 +25,17 @@ class GitHubFetcher:
     def fetch_activity(self) -> Dict[str, Dict[str, str]]:
         """Fetch commits and PRs from GitHub repository."""
         now = datetime.now(timezone.utc)
-        since = now - timedelta(hours=hours)
+        since = now - timedelta(hours=self.hours)
 
-        commits = self._fetch_commits(owner, repo, since, now)
-        prs = self._fetch_pull_requests(owner, repo, since)
+        commits = self._fetch_commits(self.owner, self.repo, since, now)
+        prs = self._fetch_pull_requests(self.owner, self.repo, since)
 
         activities_by_user = self._group_activities(commits, prs)
 
         return activities_by_user
 
-    def _fetch_commits(self, owner: str, repo: str, since: datetime, until: datetime) -> List[Dict]:
-        url = f"https://api.github.com/repos/{owner}/{repo}/commits"
+    def _fetch_commits(self, since: datetime, until: datetime) -> List[Dict]:
+        url = f"https://api.github.com/repos/{self.owner}/{self.repo}/commits"
         params = {"since": since.isoformat(), "until": until.isoformat(), "per_page": 100}
         try:
             response = requests.get(url, headers=self.headers, params=params)
@@ -82,24 +81,21 @@ class GitHubFetcher:
     def _group_activities(self, commits: List[Dict], prs: List[Dict]) -> Dict[str, Dict[str, str]]:
         activities_by_user = {}
 
-        # Group commits by user and combine messages
         for commit in commits:
             user = commit["user"]
             activities_by_user.setdefault(user, {"commits": [], "prs": []})
             activities_by_user[user]["commits"].append(commit["message"])
 
-        # Group PRs by user and combine titles
         for pr in prs:
             user = pr["user"]
             activities_by_user.setdefault(user, {"commits": [], "prs": []})
             activities_by_user[user]["prs"].append(pr["title"])
 
-        # Simplify the output by combining all commit messages and PR titles for each user
-        simplified_activities = {}
+        activities = {}
         for user, activities in activities_by_user.items():
-            simplified_activities[user] = {
+            activities[user] = {
                 "commits": "\n".join(activities["commits"]) if activities["commits"] else "No commits in the last 24 hours.",
                 "prs": "\n".join(activities["prs"]) if activities["prs"] else "No PRs in the last 24 hours."
             }
 
-        return simplified_activities
+        return activities
