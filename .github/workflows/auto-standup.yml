@@ -27,7 +27,7 @@ jobs:
       run: |
         python -m agent.standup_agent
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.G_TOKEN }}
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}

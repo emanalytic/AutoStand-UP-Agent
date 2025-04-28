@@ -9,8 +9,8 @@ config = Config()
 load_dotenv()
 
 class GitHubFetcher:
-    def __init__(self, token: str = None):
-        self.token = token or os.getenv("G_TOKEN")
+    def __init__(self):
+        self.token =  os.getenv("G_TOKEN")
         self.owner = config.get('settings', 'owner')
         self.repo = config.get('settings', 'repo')
         self.hours = int(config.get('settings', 'hours'))
