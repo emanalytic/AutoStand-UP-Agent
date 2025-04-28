@@ -25,7 +25,7 @@ jobs:
 
     - name: Run Auto Standup Agent
       run: |
-        python agent/standup_agent.py
+        python -m agent.standup_agent
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
