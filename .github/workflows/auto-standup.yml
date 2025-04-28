@@ -2,7 +2,7 @@ name: Auto Standup Agent
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # Every day at 9 AM UTC
+    - cron: '42 16 * * *'
   workflow_dispatch:
 
 jobs:
@@ -25,10 +25,10 @@ jobs:
 
     - name: Run Auto Standup Agent
       run: |
-        python agents/slack_poster.py
+        python agent/standup_agent.py
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        DATABASE_ID: ${{ secrets.DATABASE_ID }}

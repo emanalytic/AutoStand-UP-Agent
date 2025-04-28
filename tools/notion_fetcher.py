@@ -8,9 +8,9 @@ load_dotenv()
 
 
 class NotionFetcher:
-    def __init__(self, token: str = None, database_id: str = None):
-        self.token = token or os.getenv("NOTION_TOKEN")
-        self.database_id = database_id or os.getenv("DATABASE_ID")
+    def __init__(self):
+        self.token =  os.getenv("NOTION_TOKEN")
+        self.database_id = os.getenv("DATABASE_ID")
         if not self.token:
             raise ValueError("NOTION_TOKEN not found in environment variables")
 

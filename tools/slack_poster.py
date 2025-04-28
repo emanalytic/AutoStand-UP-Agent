@@ -1,11 +1,13 @@
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+from config import Config
 import os
 
+config = Config()
 class SlackPoster:
-    def __init__(self, slack_token=None, slack_channel=None):
-        self.slack_token = slack_token or os.getenv("SLACK_BOT_TOKEN")
-        self.slack_channel = slack_channel or os.getenv("SLACK_CHANNEL")
+    def __init__(self):
+        self.slack_token = os.getenv("SLACK_BOT_TOKEN")
+        self.slack_channel = config.get('settings', 'slack_channel')
         self.slack_client = WebClient(token=self.slack_token)
 
     def post_message(self, text: str):

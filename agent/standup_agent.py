@@ -53,8 +53,8 @@ class AutoStandupAgent:
             }
         ]
 
-        retry_attempts = 3
-        for attempt in range(retry_attempts):
+       retry_attempts = 3
+       for attempt in range(retry_attempts):
             try:
                 completion = self.groq_client.chat.completions.create(
                     model=self.llm_model,
@@ -68,3 +68,7 @@ class AutoStandupAgent:
                     time.sleep(2 ** attempt)
                 else:
                     raise Exception("Failed to format standup.")
+
+if __name__ == "__main__":
+    agent = AutoStandupAgent()
+    agent.run()
