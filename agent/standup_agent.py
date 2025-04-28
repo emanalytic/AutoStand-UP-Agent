@@ -60,6 +60,7 @@ class AutoStandupAgent:
                     "    • *What is being worked on today:* A concise description of ongoing work\n"
                     "    • *Any blockers or challenges:* Mention any issues preventing progress, if applicable\n"
                     "    • *Due dates or goals:* Any important deadlines or milestones\n\n"
+                    "No extra lines, no headings beyond the one above, no “Here is” or “Below,” no code fences."
                     "Focus on professional, concise language while maintaining a tone of collaboration and progress."
                 )
             }
