@@ -29,9 +29,28 @@ class AutoStandupAgent:
         self.slack_poster.post_message(formatted_standup)
 
     def _format_standup(self, standup_report):
-        messages = [
-            {"role": "system", "content": "You format daily standups..."},
-            {"role": "user", "content": f"Input JSON: {standup_report}\nFormat for Slack..."}
+       messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an assistant that converts a JSON stand-up report into a single Slack message. "
+                    "Your output must use only Slack markdown: "
+                    "*bold* for names and labels, _italics_ for dates or status, and • for bullet points. "
+                    "Do not add any introduction, explanation or LLM-style framing—output begins immediately with the report."
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Input JSON = {standup_report}\n\n"
+                    "Produce exactly the following structure in Slack markdown:\n\n"
+                    "*Daily Stand-up — <today’s date in _MM/DD/YYYY_>*\n"
+                    "For each team member, in the order given, include:\n"
+                    "  *Name* \n"
+                    "    • Concise Summary of their work in professional tone"
+                    "No extra lines, no headings beyond the one above, no “Here is” or “Below,” no code fences."
+                )
+            }
         ]
 
         retry_attempts = 3
