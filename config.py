@@ -15,3 +15,10 @@ class Config:
         except KeyError:
             raise KeyError(f'{key} not found in {self.config_file}')
 
+    def get_section(self, section):
+        """Gets all key-value pairs from a section."""
+        if section in self.config:
+            return dict(self.config[section])
+        else:
+            raise KeyError(f"Section '{section}' not found in {self.config_file}")
+

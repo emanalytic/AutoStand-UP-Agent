@@ -91,11 +91,15 @@ class GitHubFetcher:
             activities_by_user.setdefault(user, {"commits": [], "prs": []})
             activities_by_user[user]["prs"].append(pr["title"])
 
-        activities = {}
+        collective_act = {}
         for user, activities in activities_by_user.items():
-            activities[user] = {
+            collective_act[user] = {
                 "commits": "\n".join(activities["commits"]) if activities["commits"] else "No commits in the last 24 hours.",
                 "prs": "\n".join(activities["prs"]) if activities["prs"] else "No PRs in the last 24 hours."
             }
 
-        return activities
+        return collective_act
+
+
+d = GitHubFetcher()
+print(d.fetch_activity())
