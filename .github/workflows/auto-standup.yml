@@ -1,9 +1,9 @@
 name: Auto Standup Agent
 
 on:
-  schedule:
-    - cron: '42 16 * * *'
-  workflow_dispatch:
+  # schedule:
+  #   - cron: '42 16 * * *'
+  # workflow_dispatch:
 
 jobs:
   run-standup:
