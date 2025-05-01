@@ -1,4 +1,5 @@
-# Auto Standup Agent
+# Auto Standup Agent <img src="https://github.com/user-attachments/assets/6fc6e64d-3c23-4f11-91af-5721fed9fa05" alt="AutoStand-UP-Agent Logo" width="200"/>
+
 
 A lightweight agent that pulls activity from GitHub and Notion, summarizes each team member’s progress using a language model, and sends a clean Slack update. Designed for teams who want async visibility without the overhead of manual standups.
 
