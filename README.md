@@ -54,7 +54,7 @@ flowchart TD
 ### 1. Clone the repo and install dependencies
 
 ```bash
-git clone https://github.com/your-org/auto-standup-agent.git
+git clone https://github.com/emanalytic/auto-standup-agent.git
 cd auto-standup-agent
 pip install -r requirements.txt
 ```
