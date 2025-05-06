@@ -80,13 +80,18 @@ Add one line per user for both GitHub and Slack. IDs must match exactly.
 
 ---
 
-### B. Set your model config
+### B. Set your config
 
 Also in `config.ini`, set the language model you’re using under `[settings]`:
 
 ```ini
 [settings]
-model = mixtral-8x7b-32768
+model = llama3-70b-8192
+```
+Also, update the slack channel you want to post the message
+```ini
+[settings]
+slack_channel=#daily-standup
 ```
 
 ---
