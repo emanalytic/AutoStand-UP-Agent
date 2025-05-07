@@ -93,7 +93,12 @@ Also, update the slack channel you want to post the message
 [settings]
 slack_channel=#daily-standup
 ```
-
+If there is organisation, their need to fetch all repository within organisation.
+add your organization name
+```ini
+[settings]
+organization = your_org_name
+```
 ---
 
 ## Add GitHub Secrets
