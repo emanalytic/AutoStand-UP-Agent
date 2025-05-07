@@ -136,6 +136,10 @@ You can adjust the cron expression to change the time of day when the agent runs
 
 You can change the schedule timing [using this guide](https://crontab.guru/).
 
+## Teams Integration
+
+Require Microsoft 365 (business or enterprise) account to use the Teams integration for Webhook.
+
 ---
 
 ## Run Locally

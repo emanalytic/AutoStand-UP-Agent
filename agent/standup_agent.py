@@ -14,6 +14,7 @@ class AutoStandupAgent:
         self.github_fetcher = GitHubFetcher()
         self.notion_fetcher = NotionFetcher()
         self.slack_poster = SlackPoster()
+        self.teams_poster = TeamsPoster()
         self.groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.llm_model = config.get('settings', 'model')
 
@@ -28,6 +29,7 @@ class AutoStandupAgent:
 
         formatted_standup = self._format_standup(standup_report)
         self.slack_poster.post_message(formatted_standup)
+        self.teams_poster.post_message(formatted_standup)
 
     def _format_standup(self, standup_report):
 
