@@ -1,3 +1,4 @@
+from tools.orgnanization_github_fetcher import OrgGitHubFetcher
 from tools.slack_poster import SlackPoster
 from tools.github_fetcher import GitHubFetcher
 from tools.notion_fetcher import NotionFetcher
