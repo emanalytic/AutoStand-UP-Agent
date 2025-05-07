@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class GitHubFetcher:
+class OrgGitHubFetcher:
     def __init__(self):
         self.token = os.getenv("G_TOKEN")
         self.organization = config.get('settings', 'organization')
