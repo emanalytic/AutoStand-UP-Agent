@@ -95,7 +95,7 @@ slack_channel=#daily-standup
 ```
 Choose the GitHub mode:
 
-`mode = org` — fetch activity from all organization repositories
+`mode = org` — fetch activity from all organization repositories\
 `mode = repo` — fetch from a single specified repo
 
 ```ini
