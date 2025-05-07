@@ -132,7 +132,7 @@ class OrgGitHubFetcher:
 
         return activities_by_user
 
-# fetcher = GitHubFetcher()
+# fetcher = OrgGitHubFetcher()
 # print(fetcher.fetch_activity())
 #example output
 # {
