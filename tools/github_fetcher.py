@@ -5,17 +5,20 @@ import requests
 from dotenv import load_dotenv
 from config import Config
 
-config = Config()
 load_dotenv()
+config = Config()
 
 class GitHubFetcher:
     def __init__(self):
-        self.token =  os.getenv("G_TOKEN")
-        self.owner = config.get('settings', 'owner')
-        self.repo = config.get('settings', 'repo')
-        self.hours = int(config.get('settings', 'hours'))
+        self.token = os.getenv("G_TOKEN")
         if not self.token:
             raise ValueError("GITHUB_TOKEN not found in environment variables")
+
+        self.mode = config.get("settings", "mode", fallback="repo").lower()
+        self.organization = config.get("settings", "organization", fallback=None)
+        self.owner = config.get("settings", "owner", fallback=None)
+        self.repo = config.get("settings", "repo", fallback=None)
+        self.hours = int(config.get("settings", "hours", fallback="24"))
 
         self.headers = {
             "Authorization": f"token {self.token}",
@@ -23,19 +26,54 @@ class GitHubFetcher:
         }
 
     def fetch_activity(self) -> Dict[str, Dict[str, str]]:
-        """Fetch commits and PRs from GitHub repository."""
         now = datetime.now(timezone.utc)
         since = now - timedelta(hours=self.hours)
 
-        commits = self._fetch_commits(since, now)
-        prs = self._fetch_pull_requests(self.owner, self.repo, since)
+        if self.mode == "org":
+            if not self.organization:
+                raise ValueError("Organization mode selected but no organization name provided.")
+            return self._fetch_org_activity(since, now)
 
-        activities_by_user = self._group_activities(commits, prs)
+        elif self.mode == "repo":
+            if not (self.owner and self.repo):
+                raise ValueError("Repo mode selected but owner/repo not specified.")
+            commits = self._fetch_commits(self.owner, self.repo, since, now)
+            prs = self._fetch_pull_requests(self.owner, self.repo, since)
+            return self._format_grouped(self._group_activities(commits, prs))
 
-        return activities_by_user
+        else:
+            raise ValueError("Invalid mode. Choose 'org' or 'repo' in config.")
 
-    def _fetch_commits(self, since: datetime, until: datetime) -> List[Dict]:
-        url = f"https://api.github.com/repos/{self.owner}/{self.repo}/commits"
+    def _fetch_org_activity(self, since: datetime, until: datetime) -> Dict[str, Dict[str, str]]:
+        repos = self._fetch_org_repositories()
+        all_activities = {}
+
+        for repo in repos:
+            repo_name = repo["name"]
+            commits = self._fetch_commits(self.organization, repo_name, since, until)
+            prs = self._fetch_pull_requests(self.organization, repo_name, since)
+            grouped = self._group_activities(commits, prs)
+
+            for user, data in grouped.items():
+                if user not in all_activities:
+                    all_activities[user] = {"commits": [], "prs": []}
+                all_activities[user]["commits"].extend(data["commits"])
+                all_activities[user]["prs"].extend(data["prs"])
+
+        return self._format_grouped(all_activities)
+
+    def _fetch_org_repositories(self) -> List[Dict]:
+        url = f"https://api.github.com/orgs/{self.organization}/repos"
+        try:
+            response = requests.get(url, headers=self.headers, params={"per_page": 100})
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"[GitHubFetcher] Error fetching repos: {e}")
+            return []
+
+    def _fetch_commits(self, owner: str, repo: str, since: datetime, until: datetime) -> List[Dict]:
+        url = f"https://api.github.com/repos/{owner}/{repo}/commits"
         params = {"since": since.isoformat(), "until": until.isoformat(), "per_page": 100}
         try:
             response = requests.get(url, headers=self.headers, params=params)
@@ -54,7 +92,7 @@ class GitHubFetcher:
                 })
             return commits
         except Exception as e:
-            print(f"[GitHubFetcher] Error fetching commits: {e}")
+            print(f"[GitHubFetcher] Error fetching commits for {repo}: {e}")
             return []
 
     def _fetch_pull_requests(self, owner: str, repo: str, since: datetime) -> List[Dict]:
@@ -75,10 +113,10 @@ class GitHubFetcher:
                     })
             return prs
         except Exception as e:
-            print(f"[GitHubFetcher] Error fetching PRs: {e}")
+            print(f"[GitHubFetcher] Error fetching PRs for {repo}: {e}")
             return []
 
-    def _group_activities(self, commits: List[Dict], prs: List[Dict]) -> Dict[str, Dict[str, str]]:
+    def _group_activities(self, commits: List[Dict], prs: List[Dict]) -> Dict[str, Dict[str, List[str]]]:
         activities_by_user = {}
 
         for commit in commits:
@@ -91,15 +129,19 @@ class GitHubFetcher:
             activities_by_user.setdefault(user, {"commits": [], "prs": []})
             activities_by_user[user]["prs"].append(pr["title"])
 
-        collective_act = {}
-        for user, activities in activities_by_user.items():
-            collective_act[user] = {
-                "commits": "\n".join(activities["commits"]) if activities["commits"] else "No commits in the last 24 hours.",
-                "prs": "\n".join(activities["prs"]) if activities["prs"] else "No PRs in the last 24 hours."
-            }
+        return activities_by_user
 
-        return collective_act
+    def _format_grouped(self, grouped: Dict[str, Dict[str, List[str]]]) -> Dict[str, Dict[str, str]]:
+        return {
+            user: {
+                "commits": "\n".join(data["commits"]) if data["commits"] else "No commits.",
+                "prs": "\n".join(data["prs"]) if data["prs"] else "No PRs."
+            } for user, data in grouped.items()
+        }
 
 
-d = GitHubFetcher()
-print(d.fetch_activity())
+# --- Example usage ---
+if __name__ == "__main__":
+    fetcher = GitHubFetcher()
+    activity = fetcher.fetch_activity()
+    print(activity)

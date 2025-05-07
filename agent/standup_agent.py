@@ -1,4 +1,3 @@
-from tools.orgnanization_github_fetcher import OrgGitHubFetcher
 from tools.slack_poster import SlackPoster
 from tools.github_fetcher import GitHubFetcher
 from tools.notion_fetcher import NotionFetcher
@@ -15,7 +14,6 @@ class AutoStandupAgent:
         self.github_fetcher = GitHubFetcher()
         self.notion_fetcher = NotionFetcher()
         self.slack_poster = SlackPoster()
-        self.teams_poster = TeamsPoster()
         self.groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.llm_model = config.get('settings', 'model')
 
@@ -30,7 +28,6 @@ class AutoStandupAgent:
 
         formatted_standup = self._format_standup(standup_report)
         self.slack_poster.post_message(formatted_standup)
-        self.teams_poster.post_message(formatted_standup)
 
     def _format_standup(self, standup_report):
 
@@ -63,7 +60,6 @@ class AutoStandupAgent:
                     "    • *What is being worked on today:* A concise description of ongoing work\n"
                     "    • *Any blockers or challenges:* Mention any issues preventing progress, if applicable\n"
                     "    • *Due dates or goals:* Any important deadlines or milestones\n\n"
-                    "No extra lines, no headings beyond the one above, no “Here is” or “Below,” no code fences."
                     "Focus on professional, concise language while maintaining a tone of collaboration and progress."
                 )
             }
