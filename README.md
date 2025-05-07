@@ -88,16 +88,22 @@ Also in `config.ini`, set the language model you’re using under `[settings]`:
 [settings]
 model = llama3-70b-8192
 ```
-Also, update the slack channel you want to post the message
+Update the slack channel you want to post the message
 ```ini
 [settings]
 slack_channel=#daily-standup
 ```
-If there is organisation, their need to fetch all repository within organisation.
-add your organization name
+Choose the GitHub mode:
+
+`mode = org` — fetch activity from all organization repositories
+`mode = repo` — fetch from a single specified repo
+
 ```ini
 [settings]
-organization = your_org_name
+mode = org  ; or "repo"
+organization = my-org-name  ; required if mode is "org"
+owner = username            ; required if mode is "repo"
+repo = repo-name  
 ```
 ---
 
@@ -141,7 +147,7 @@ You can adjust the cron expression to change the time of day when the agent runs
 
 You can change the schedule timing [using this guide](https://crontab.guru/).
 
-## Teams Integration
+## Microsoft Teams Integration
 
 Require Microsoft 365 (business or enterprise) account to use the Teams integration for Webhook.
 
