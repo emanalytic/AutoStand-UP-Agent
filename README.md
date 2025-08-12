@@ -5,7 +5,7 @@ A lightweight agent that pulls activity from GitHub and Notion, summarizes each 
 
 ## What It Does
 
-1. **Fetches activity** from GitHub (commits, PRs) and Notion (task status).
+1. **Fetches activity** from GitHub (commits, PRs) and task data from Notion or GitHub Projects issues.
 2. **Maps activity to individual contributors** using GitHub usernames and Slack IDs.
 3. **Uses a local or API-based language model** to generate clear summaries (what was done, what’s in progress, blockers).
 4. **Formats and sends messages to Slack** in a simple, readable format.
@@ -25,13 +25,17 @@ flowchart TD
     C --> C2[Fetch PRs created/merged]
     C --> C3[Extract metadata - author, repo, message]
 
-    B --> D[Notion  API]
-    D --> D1[Fetch Task DB or Board]
-    D --> D2[Parse status - In Progress, Blocked, Done]
-    D --> D3[Match user activity with GitHub if possible]
+    B --> D[Task Data Source]
+    D --> D1{Data Source Type?}
+    D1 -->|Notion| D2[Notion API - Fetch Task DB]
+    D1 -->|GitHub Projects| D3[GitHub API - Fetch Issues]
+    D2 --> D4[Parse Notion status - In Progress, Blocked, Done]
+    D3 --> D5[Parse GitHub issues - Map labels to status]
+    D4 --> D6[Match user activity with GitHub if possible]
+    D5 --> D6
 
     C3 --> E[Activity Aggregation Engine]
-    D3 --> E
+    D6 --> E
 
     E --> F[LLM Summarizer - GROQ API]
     F --> F1[Prompt engineering - What I did / Doing / Blockers]
@@ -105,6 +109,32 @@ organization = my-org-name  ; required if mode is "org"
 owner = username            ; required if mode is "repo"
 repo = repo-name  
 ```
+
+### C. Choose your task data source
+
+You can now choose between two data sources for task information:
+
+- **Notion** — fetch tasks from a Notion database (requires Notion integration setup)
+- **GitHub Projects** — fetch issues from GitHub repositories/organization as tasks
+
+```ini
+[settings]
+data_source = notion          ; or "github_projects"
+```
+
+**Notion setup** (traditional):
+- Requires `NOTION_TOKEN` and `DATABASE_ID` environment variables
+- Uses your existing Notion database structure
+
+**GitHub Projects setup** (new option):
+- Uses the same GitHub token (`G_TOKEN`) as for commit/PR fetching
+- Fetches GitHub issues as tasks, mapping issue states to task statuses:
+  - Open issues → "To Do"
+  - Issues with "in progress" label → "In Progress"  
+  - Issues with "blocked" label → "Blocked"
+  - Issues with "review" label → "Under Review"
+  - Closed issues → "Done"
+
 ---
 
 ## Add GitHub Secrets
@@ -116,18 +146,21 @@ Go to:
 
 Add the following:
 
-| Secret Name         | Description                              |
-|---------------------|------------------------------------------|
-| `G_TOKEN`           | GitHub Personal Access Token             |
-| `SLACK_BOT_TOKEN`   | Slack Bot Token                          |
-| `NOTION_TOKEN`      | Your Notion integration token            |
-| `GROQ_API_KEY`      | API key for LLM summarization            |
-| `DATABASE_ID`       | Notion database ID (where your tasks live) |
-| `TWILIO_ACCOUNT_SID`| Twilio Account SID (for WhatsApp)        |
-| `TWILIO_AUTH_TOKEN` | Twilio Auth Token (for WhatsApp)         |
-| `OPENAI_API_KEY`  | API key for OpenAI LLM (if using OpenAI)|
+| Secret Name         | Description                              | Required |
+|---------------------|------------------------------------------|----------|
+| `G_TOKEN`           | GitHub Personal Access Token             | Yes |
+| `SLACK_BOT_TOKEN`   | Slack Bot Token                          | If using Slack |
+| `NOTION_TOKEN`      | Your Notion integration token            | If using Notion data source |
+| `DATABASE_ID`       | Notion database ID (where your tasks live) | If using Notion data source |
+| `GROQ_API_KEY`      | API key for LLM summarization            | If using Groq |
+| `OPENAI_API_KEY`    | API key for OpenAI LLM (if using OpenAI) | If using OpenAI |
+| `TWILIO_ACCOUNT_SID`| Twilio Account SID (for WhatsApp)        | If using WhatsApp |
+| `TWILIO_AUTH_TOKEN` | Twilio Auth Token (for WhatsApp)         | If using WhatsApp |
 
-**Note:** You only need either `GROQ_API_KEY` or `OPENAI_API_KEY` depending on which LLM provider you configure in `config.ini`.
+**Notes:** 
+- You only need either `GROQ_API_KEY` or `OPENAI_API_KEY` depending on which LLM provider you configure in `config.ini`.
+- You only need `NOTION_TOKEN` and `DATABASE_ID` if you set `data_source = notion` in your config.
+- If you set `data_source = github_projects`, only the `G_TOKEN` is needed for task data (same token used for GitHub activity).
 
 ---
 
