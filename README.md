@@ -121,8 +121,11 @@ Add the following:
 | `G_TOKEN`         | GitHub Personal Access Token             |
 | `SLACK_BOT_TOKEN` | Slack Bot Token                          |
 | `NOTION_TOKEN`    | Your Notion integration token            |
-| `GROQ_API_KEY`    | API key for LLM summarization            |
+| `GROQ_API_KEY`    | API key for Groq LLM (if using Groq)    |
+| `OPENAI_API_KEY`  | API key for OpenAI LLM (if using OpenAI)|
 | `DATABASE_ID`     | Notion database ID (where your tasks live) |
+
+**Note:** You only need either `GROQ_API_KEY` or `OPENAI_API_KEY` depending on which LLM provider you configure in `config.ini`.
 
 ---
 
