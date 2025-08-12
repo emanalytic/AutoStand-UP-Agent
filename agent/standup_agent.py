@@ -83,7 +83,7 @@ class AutoStandupAgent:
     def _format_standup(self, standup_report):
 
 
-        today_date = datetime.now().strftime("%m/%d/%Y")
+        today_date = datetime.now().strftime("%d/%m/%Y")
         
         messages = [
             {
