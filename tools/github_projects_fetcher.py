@@ -49,8 +49,8 @@ class GitHubProjectsFetcher:
         repository = 'yca-ca-mvp'
         return self._fetch_repo_issues(self.owner, repository, since)
 
-        else:
-            raise ValueError("Invalid mode. Choose 'org' or 'repo' in config.")
+        #else:
+        #    raise ValueError("Invalid mode. Choose 'org' or 'repo' in config.")
 
     def _fetch_org_issues(self, since: datetime) -> List[Dict]:
         """Fetch issues from all repositories in the organization."""
