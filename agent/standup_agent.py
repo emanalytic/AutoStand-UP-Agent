@@ -9,6 +9,7 @@ from llm_providers.factory import create_llm_provider
 import os
 import time
 import json
+import pprint
 from datetime import datetime
 
 config = Config()
@@ -77,22 +78,27 @@ class AutoStandupAgent:
 
     def run(self):
         github_data = self.github_fetcher.fetch_activity()
-        
-        # Fetch task data from configured source
+        print("GitHub Data:")
+        pprint.pprint(github_data)  # pretty print
+    
         if self.data_source == 'github_projects':
             task_data = self.task_fetcher.fetch_issues()
-        else:  # notion or fallback
+        else:
             task_data = self.task_fetcher.fetch_tasks()
-
+    
+        print("Task Data:")
+        pprint.pprint(task_data)  # pretty print
+    
         standup_report = {
             "github": github_data,
             "tasks": task_data,
             "data_source": self.data_source
         }
-
+        print("Standup Report:")
+        pprint.pprint(standup_report)  # pretty print
+    
         formatted_standup = self._format_standup(standup_report)
-        
-        # Post to all configured platforms
+    
         success_count = 0
         for platform_name, poster in self.posters:
             try:
@@ -101,10 +107,10 @@ class AutoStandupAgent:
                 success_count += 1
             except Exception as e:
                 print(f"Failed to post to {platform_name}: {e}")
-        
+    
         if success_count == 0:
             raise Exception("Failed to post standup to any platform")
-        
+    
         return formatted_standup
 
     def _format_standup(self, standup_report):
