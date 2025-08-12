@@ -47,7 +47,7 @@ class GitHubProjectsFetcher:
         #    raise ValueError("Repo mode selected but owner/repo not specified.")
 
         repository = 'yca-ca-mvp'
-        return self._fetch_repo_issues(self.owner, repository, since)
+        return self._fetch_repo_issues(self.organization, repository, since)
 
         #else:
         #    raise ValueError("Invalid mode. Choose 'org' or 'repo' in config.")
@@ -80,9 +80,9 @@ class GitHubProjectsFetcher:
             print(f"[GitHubProjectsFetcher] Error fetching repos: {e}")
             return []
 
-    def _fetch_repo_issues(self, owner: str, repo: str, since: datetime) -> List[Dict]:
+    def _fetch_repo_issues(self, organization: str, repo: str, since: datetime) -> List[Dict]:
         """Fetch issues from a specific GitHub repository since a given datetime."""
-        url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+        url = f"https://api.github.com/repos/{organization}/{repo}/issues"
         params = {
             "since": since.isoformat(),
             "state": "all",  # Include both open and closed issues
