@@ -1,6 +1,9 @@
 name: Auto Standup Agent
 
 on:
+  push:
+    branches:
+      - main
   # schedule:
   #   - cron: '42 16 * * *'
   workflow_dispatch:
