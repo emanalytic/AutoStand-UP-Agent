@@ -175,8 +175,24 @@ The agent supports WhatsApp integration using Twilio's WhatsApp API. This allows
    [settings]
    posting_methods = slack, whatsapp
    whatsapp_from = +14155238886  # Your Twilio WhatsApp number
-   whatsapp_to = +1234567890     # Your WhatsApp number
+   
+   # Send to individual WhatsApp number
+   whatsapp_to = +1234567890
+   
+   # OR send to WhatsApp group (get group ID from Twilio)
+   whatsapp_to = group:12345678901234567890
+   
+   # OR send to multiple recipients (groups and individuals)
+   whatsapp_to = +1234567890, group:12345678901234567890, +9876543210
    ```
+
+   **Getting WhatsApp Group ID:**
+   - Create a WhatsApp group with your team members
+   - Add your Twilio WhatsApp number to the group
+   - Send a message from the group to your Twilio number
+   - Check your Twilio console logs to find the group ID
+   - Group IDs typically look like: `12345678901234567890@g.us`
+   - Use format: `group:12345678901234567890@g.us` in config
 
 4. **Add Environment Variables**
    
