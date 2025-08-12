@@ -3,6 +3,7 @@ from tools.teams_poster import TeamsPoster
 from tools.whatsapp_poster import WhatsAppPoster
 from tools.github_fetcher import GitHubFetcher
 from tools.notion_fetcher import NotionFetcher
+from tools.github_projects_fetcher import GitHubProjectsFetcher
 from config import Config
 from llm_providers.factory import create_llm_provider
 import os
@@ -15,8 +16,28 @@ member_info = config.get_section("members")
 class AutoStandupAgent:
     def __init__(self):
         self.github_fetcher = GitHubFetcher()
-        self.notion_fetcher = NotionFetcher()
-        self.slack_poster = SlackPoster()        
+        
+        # Determine data source for tasks - either Notion or GitHub Projects
+        self.data_source = config.get('settings', 'data_source', fallback='notion').lower()
+        
+        try:
+            if self.data_source == 'notion':
+                self.task_fetcher = NotionFetcher()
+            elif self.data_source == 'github_projects':
+                self.task_fetcher = GitHubProjectsFetcher()
+            else:
+                print(f"Warning: Unknown data source '{self.data_source}'. Defaulting to Notion.")
+                self.task_fetcher = NotionFetcher()
+        except Exception as e:
+            print(f"Warning: Could not initialize {self.data_source} fetcher: {e}")
+            print("Falling back to GitHub Projects fetcher.")
+            try:
+                self.task_fetcher = GitHubProjectsFetcher()
+                self.data_source = 'github_projects'
+            except Exception as e2:
+                print(f"Warning: Could not initialize GitHub Projects fetcher either: {e2}")
+                raise ValueError("Could not initialize any task data source. Please check your configuration and credentials.")
+            
         # Get LLM provider settings from config
         self.llm_provider_type = config.get('settings', 'llm_provider', fallback='groq')
         
@@ -55,11 +76,17 @@ class AutoStandupAgent:
 
     def run(self):
         github_data = self.github_fetcher.fetch_activity()
-        notion_data = self.notion_fetcher.fetch_tasks()
+        
+        # Fetch task data from configured source
+        if self.data_source == 'github_projects':
+            task_data = self.task_fetcher.fetch_issues()
+        else:  # notion or fallback
+            task_data = self.task_fetcher.fetch_tasks()
 
         standup_report = {
             "github": github_data,
-            "notion": notion_data
+            "tasks": task_data,
+            "data_source": self.data_source
         }
 
         formatted_standup = self._format_standup(standup_report)
@@ -80,7 +107,8 @@ class AutoStandupAgent:
         return formatted_standup
 
     def _format_standup(self, standup_report):
-
+        data_source = standup_report.get("data_source", "notion")
+        task_label = "GitHub Projects Issues" if data_source == "github_projects" else "Notion Tasks"
 
         messages = [
             {
@@ -102,6 +130,7 @@ class AutoStandupAgent:
                 "content": (
                     f"member_info = {json.dumps(member_info)}\n\n"
                     f"Input JSON = {standup_report}\n"
+                    f"Data source for tasks: {task_label}\n\n"
                     "Generate a Slack message with the following structure:\n\n"
                     "*Daily Stand-up Report — _MM/DD/YYYY_*\n\n"
                     "For each team member, follow this format:\n"
