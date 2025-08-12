@@ -5,3 +5,4 @@ langgraph
 slack-sdk
 groq
 openai
+twilio
