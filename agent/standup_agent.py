@@ -4,7 +4,7 @@ from tools.whatsapp_poster import WhatsAppPoster
 from tools.github_fetcher import GitHubFetcher
 from tools.notion_fetcher import NotionFetcher
 from config import Config
-from groq import Groq
+from llm_providers.factory import create_llm_provider
 import os
 import time
 import json
@@ -16,6 +16,9 @@ class AutoStandupAgent:
     def __init__(self):
         self.github_fetcher = GitHubFetcher()
         self.notion_fetcher = NotionFetcher()
+        self.slack_poster = SlackPoster()        
+        # Get LLM provider settings from config
+        self.llm_provider_type = config.get('settings', 'llm_provider', fallback='groq')
         
         # Initialize posters based on configuration
         self.posters = []
@@ -45,8 +48,10 @@ class AutoStandupAgent:
             print("Warning: No valid posters configured. Defaulting to Slack.")
             self.posters.append(('Slack', SlackPoster()))
         
-        self.groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.llm_model = config.get('settings', 'model')
+       
+        # Create the appropriate LLM provider
+        self.llm_provider = create_llm_provider(self.llm_provider_type, self.llm_model)
 
     def run(self):
         github_data = self.github_fetcher.fetch_activity()
@@ -109,21 +114,8 @@ class AutoStandupAgent:
                 )
             }
         ]
-        retry_attempts = 3
-        for attempt in range(retry_attempts):
-            try:
-                completion = self.groq_client.chat.completions.create(
-                    model=self.llm_model,
-                    messages=messages,
-                    temperature=0.7,
-                    max_tokens=500
-                )
-                return completion.choices[0].message.content.strip()
-            except Exception as e:
-                if attempt < retry_attempts - 1:
-                    time.sleep(2 ** attempt)
-                else:
-                    raise Exception("Failed to format standup.")
+        
+        return self.llm_provider.chat_completion(messages, temperature=0.7, max_tokens=500)
 
 if __name__ == "__main__":
     agent = AutoStandupAgent()

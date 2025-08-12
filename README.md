@@ -125,6 +125,9 @@ Add the following:
 | `DATABASE_ID`       | Notion database ID (where your tasks live) |
 | `TWILIO_ACCOUNT_SID`| Twilio Account SID (for WhatsApp)        |
 | `TWILIO_AUTH_TOKEN` | Twilio Auth Token (for WhatsApp)         |
+| `OPENAI_API_KEY`  | API key for OpenAI LLM (if using OpenAI)|
+
+**Note:** You only need either `GROQ_API_KEY` or `OPENAI_API_KEY` depending on which LLM provider you configure in `config.ini`.
 
 ---
 
