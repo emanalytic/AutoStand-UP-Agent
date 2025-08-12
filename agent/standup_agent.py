@@ -9,6 +9,7 @@ from llm_providers.factory import create_llm_provider
 import os
 import time
 import json
+from datetime import datetime
 
 config = Config()
 member_info = config.get_section("members")
@@ -110,36 +111,39 @@ class AutoStandupAgent:
         data_source = standup_report.get("data_source", "notion")
         task_label = "GitHub Projects Issues" if data_source == "github_projects" else "Notion Tasks"
 
+        today_date = datetime.now().strftime("%d/%m/%Y")
+        
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are an assistant that formats daily standup updates for Slack in a professional and human-friendly tone. "
-                    "The goal is to provide a concise update of each team member’s key activities and tasks, while maintaining a clean and easy-to-read structure. "
-                    "Use the following formatting rules:\n"
-                    "- Mention team members by their Slack IDs (e.g., <@SLACK_ID>)\n"
-                    "- Use *bold* for labels (e.g., *Completed Yesterday:*)\n"
-                    "- Use _italics_ for dates and task statuses (e.g., _2025-04-27_ or _In Progress_)\n"
-                    "- Use bullet points (•) to list key tasks or updates\n"
-                    "- Focus on keeping the report simple, clear, and professional without unnecessary fluff or jargon.\n"
-                    "Do not add extra introductions or LLM-style framing. Start directly with the stand-up update."
+                    "You are a stand-up update assistant specialized in formatting daily reports for Slack. "
+                    "Your output should be professional, concise, and easy to read, focusing on each team member’s key tasks and progress. "
+                    "Follow these formatting guidelines:\n"
+                    "- Mention team members using their Slack IDs (e.g., <@SLACK_ID>)\n"
+                    "- Use *bold* for section labels (e.g., *Completed Yesterday:*)\n"
+                    "- Use _italics_ for all dates, deadlines, and task statuses (e.g., _2025-04-27_, _In Progress_)\n"
+                    "- Use bullet points (•) for listing tasks or updates\n"
+                    "- Dates should be consistently formatted as _MM/DD/YYYY_ or _YYYY-MM-DD_, depending on the input, and always italicized\n"
+                    "- Avoid unnecessary jargon or filler—keep it clear and straightforward\n"
+                    "- Do not add greetings, introductions, or concluding remarks—start immediately with the stand-up content"
                 )
             },
             {
                 "role": "user",
                 "content": (
                     f"member_info = {json.dumps(member_info)}\n\n"
-                    f"Input JSON = {standup_report}\n"
+                    f"Input JSON = {json.dumps(standup_report)}\n\n"
                     f"Data source for tasks: {task_label}\n\n"
-                    "Generate a Slack message with the following structure:\n\n"
-                    "*Daily Stand-up Report — _MM/DD/YYYY_*\n\n"
-                    "For each team member, follow this format:\n"
+                    f"Create a Slack-formatted daily stand-up message structured as follows:\n\n"
+                    f"*Daily Stand-up Report — _{today_date}_*\n\n"
+                    "For each team member, format their update like this:\n"
                     "  *Name* <@SLACK_ID>\n"
-                    "    • *What was done yesterday:* A brief summary of key accomplishments or tasks completed\n"
-                    "    • *What is being worked on today:* A concise description of ongoing work\n"
-                    "    • *Any blockers or challenges:* Mention any issues preventing progress, if applicable\n"
-                    "    • *Due dates or goals:* Any important deadlines or milestones\n\n"
-                    "Focus on professional, concise language while maintaining a tone of collaboration and progress."
+                    "    • *Completed Yesterday:* Brief key accomplishments or finished tasks, including any dates in _MM/DD/YYYY_ or _YYYY-MM-DD_ format\n"
+                    "    • *Working Today:* Current tasks or focus areas, include any relevant dates italicized\n"
+                    "    • *Blockers or Challenges:* Any impediments affecting progress (omit if none)\n"
+                    "    • *Due Dates or Goals:* List any deadlines or milestones, always italicizing dates\n\n"
+                    "Maintain a consistent date format and italicize all dates to enhance readability."
                 )
             }
         ]
