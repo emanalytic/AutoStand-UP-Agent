@@ -116,13 +116,15 @@ Go to:
 
 Add the following:
 
-| Secret Name       | Description                              |
-|-------------------|------------------------------------------|
-| `G_TOKEN`         | GitHub Personal Access Token             |
-| `SLACK_BOT_TOKEN` | Slack Bot Token                          |
-| `NOTION_TOKEN`    | Your Notion integration token            |
-| `GROQ_API_KEY`    | API key for LLM summarization            |
-| `DATABASE_ID`     | Notion database ID (where your tasks live) |
+| Secret Name         | Description                              |
+|---------------------|------------------------------------------|
+| `G_TOKEN`           | GitHub Personal Access Token             |
+| `SLACK_BOT_TOKEN`   | Slack Bot Token                          |
+| `NOTION_TOKEN`      | Your Notion integration token            |
+| `GROQ_API_KEY`      | API key for LLM summarization            |
+| `DATABASE_ID`       | Notion database ID (where your tasks live) |
+| `TWILIO_ACCOUNT_SID`| Twilio Account SID (for WhatsApp)        |
+| `TWILIO_AUTH_TOKEN` | Twilio Auth Token (for WhatsApp)         |
 
 ---
 
@@ -150,6 +152,55 @@ You can change the schedule timing [using this guide](https://crontab.guru/).
 ## Microsoft Teams Integration
 
 Require Microsoft 365 (business or enterprise) account to use the Teams integration for Webhook.
+
+## WhatsApp Integration
+
+The agent supports WhatsApp integration using Twilio's WhatsApp API. This allows you to receive standup reports directly in WhatsApp.
+
+### Setup WhatsApp Integration
+
+1. **Create a Twilio Account**
+   - Sign up at [Twilio](https://www.twilio.com)
+   - Get your Account SID and Auth Token from the Twilio Console
+
+2. **Enable WhatsApp on Twilio**
+   - Go to Messaging → Try it out → Send a WhatsApp message
+   - Follow Twilio's WhatsApp setup guide
+   - Note the Twilio WhatsApp phone number (e.g., +14155238886)
+
+3. **Configure WhatsApp Settings**
+   
+   Update your `config.ini` file:
+   ```ini
+   [settings]
+   posting_methods = slack, whatsapp
+   whatsapp_from = +14155238886  # Your Twilio WhatsApp number
+   whatsapp_to = +1234567890     # Your WhatsApp number
+   ```
+
+4. **Add Environment Variables**
+   
+   Add these secrets to your GitHub repository:
+   - `TWILIO_ACCOUNT_SID`: Your Twilio Account SID
+   - `TWILIO_AUTH_TOKEN`: Your Twilio Auth Token
+
+### Using Multiple Platforms
+
+You can configure the agent to post to multiple platforms simultaneously by updating the `posting_methods` setting:
+
+```ini
+# Post to Slack only
+posting_methods = slack
+
+# Post to WhatsApp only  
+posting_methods = whatsapp
+
+# Post to both Slack and WhatsApp
+posting_methods = slack, whatsapp
+
+# Post to all platforms
+posting_methods = slack, teams, whatsapp
+```
 
 ---
 
