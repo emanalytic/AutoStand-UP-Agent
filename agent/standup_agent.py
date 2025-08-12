@@ -1,4 +1,6 @@
 from tools.slack_poster import SlackPoster
+from tools.teams_poster import TeamsPoster
+from tools.whatsapp_poster import WhatsAppPoster
 from tools.github_fetcher import GitHubFetcher
 from tools.notion_fetcher import NotionFetcher
 from config import Config
@@ -9,11 +11,40 @@ import json
 
 config = Config()
 member_info = config.get_section("members")
+
 class AutoStandupAgent:
     def __init__(self):
         self.github_fetcher = GitHubFetcher()
         self.notion_fetcher = NotionFetcher()
-        self.slack_poster = SlackPoster()
+        
+        # Initialize posters based on configuration
+        self.posters = []
+        
+        # Get enabled posting methods from config
+        enabled_methods = config.get('settings', 'posting_methods', fallback='slack').split(',')
+        enabled_methods = [method.strip().lower() for method in enabled_methods]
+        
+        for method in enabled_methods:
+            if method == 'slack':
+                try:
+                    self.posters.append(('Slack', SlackPoster()))
+                except Exception as e:
+                    print(f"Warning: Could not initialize Slack poster: {e}")
+            elif method == 'teams':
+                try:
+                    self.posters.append(('Teams', TeamsPoster()))
+                except Exception as e:
+                    print(f"Warning: Could not initialize Teams poster: {e}")
+            elif method == 'whatsapp':
+                try:
+                    self.posters.append(('WhatsApp', WhatsAppPoster()))
+                except Exception as e:
+                    print(f"Warning: Could not initialize WhatsApp poster: {e}")
+        
+        if not self.posters:
+            print("Warning: No valid posters configured. Defaulting to Slack.")
+            self.posters.append(('Slack', SlackPoster()))
+        
         self.groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.llm_model = config.get('settings', 'model')
 
@@ -27,7 +58,21 @@ class AutoStandupAgent:
         }
 
         formatted_standup = self._format_standup(standup_report)
-        self.slack_poster.post_message(formatted_standup)
+        
+        # Post to all configured platforms
+        success_count = 0
+        for platform_name, poster in self.posters:
+            try:
+                result = poster.post_message(formatted_standup)
+                print(f"Successfully posted to {platform_name}")
+                success_count += 1
+            except Exception as e:
+                print(f"Failed to post to {platform_name}: {e}")
+        
+        if success_count == 0:
+            raise Exception("Failed to post standup to any platform")
+        
+        return formatted_standup
 
     def _format_standup(self, standup_report):
 
