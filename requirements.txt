@@ -4,3 +4,5 @@ python-dotenv
 langgraph
 slack-sdk
 groq
+openai
+twilio

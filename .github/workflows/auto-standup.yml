@@ -1,8 +1,11 @@
 name: Auto Standup Agent
 
 on:
-  # schedule:
-  #   - cron: '42 16 * * *'
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 11 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -32,3 +35,7 @@ jobs:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         DATABASE_ID: ${{ secrets.DATABASE_ID }}
+        TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+        TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        
