@@ -95,7 +95,7 @@ class GitHubProjectsFetcher:
             response.raise_for_status()
             raw_issues = response.json()
 
-            print(resopnse)
+            print(response)
             print(raw_issues)
 
             issues = []
