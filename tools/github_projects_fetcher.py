@@ -38,15 +38,16 @@ class GitHubProjectsFetcher:
         now = datetime.now(timezone.utc)
         since = now - timedelta(hours=self.hours)
 
-        if self.mode == "org":
-            if not self.organization:
-                raise ValueError("Organization mode selected but no organization name provided.")
-            return self._fetch_org_issues(since)
+        # if self.mode == "org":
+        #     if not self.organization:
+        #         raise ValueError("Organization mode selected but no organization name provided.")
+        #     return self._fetch_org_issues(since)
 
-        elif self.mode == "repo":
-            if not (self.owner and self.repo):
-                raise ValueError("Repo mode selected but owner/repo not specified.")
-            return self._fetch_repo_issues(self.owner, self.repo, since)
+        #if not (self.owner and self.repo):
+        #    raise ValueError("Repo mode selected but owner/repo not specified.")
+
+        repository = 'yca-ca-mvp'
+        return self._fetch_repo_issues(self.owner, repository, since)
 
         else:
             raise ValueError("Invalid mode. Choose 'org' or 'repo' in config.")
@@ -80,10 +81,10 @@ class GitHubProjectsFetcher:
             return []
 
     def _fetch_repo_issues(self, owner: str, repo: str, since: datetime) -> List[Dict]:
-        """Fetch issues from a specific repository."""
+        """Fetch issues from a specific GitHub repository since a given datetime."""
         url = f"https://api.github.com/repos/{owner}/{repo}/issues"
         params = {
-            #"since": since.isoformat(),
+            "since": since.isoformat(),
             "state": "all",  # Include both open and closed issues
             "per_page": 100,
             "sort": "updated",
@@ -94,36 +95,33 @@ class GitHubProjectsFetcher:
             response = requests.get(url, headers=self.headers, params=params)
             response.raise_for_status()
             raw_issues = response.json()
-
-            print(response)
-            print(raw_issues)
-
+    
             issues = []
             for issue in raw_issues:
-
-                print(issue)
-                # Skip pull requests (they appear in issues API but have pull_request field)
+                # Skip pull requests (appear in issues endpoint but contain 'pull_request' key)
                 if "pull_request" in issue:
                     continue
-
-                # Extract assignee information
-                assignees = issue.get("assignees", [])
-                assignee_names = [assignee.get("login", "Unassigned") for assignee in assignees]
-                assignee_str = ", ".join(assignee_names) if assignee_names else "Unassigned"
-
+    
+                # Extract main assignee
+                assignee = issue.get("assignee")
+                assignee_str = assignee.get("login") if assignee else "Unassigned"
+    
                 # Extract labels
                 labels = issue.get("labels", [])
                 label_names = [label.get("name", "") for label in labels]
-
-                # Map issue state and labels to status similar to Notion
+    
+                # Determine status based on issue state and labels (your own method)
                 status = self._determine_status(issue.get("state", "open"), label_names)
-
-                # Extract milestone information
+    
+                # Extract milestone due date if available
                 milestone = issue.get("milestone")
-                due_date = "No Due Date"
-                if milestone and milestone.get("due_on"):
-                    due_date = milestone.get("due_on")
-
+                due_date = milestone.get("due_on") if milestone and milestone.get("due_on") else "No Due Date"
+    
+                # Truncate body if longer than 200 characters
+                body = issue.get("body", "") or ""
+                if len(body) > 200:
+                    body = body[:200] + "..."
+    
                 issue_data = {
                     "Task Name": issue.get("title", "Untitled Issue"),
                     "Assignee": assignee_str,
@@ -134,11 +132,12 @@ class GitHubProjectsFetcher:
                     "Labels": ", ".join(label_names) if label_names else "No Labels",
                     "Created": issue.get("created_at", ""),
                     "Updated": issue.get("updated_at", ""),
-                    "Body": (issue.get("body") or "")[:200] + "..." if len(issue.get("body", "")) > 200 else issue.get("body", "")
+                    "Body": body,
                 }
                 issues.append(issue_data)
-
+    
             return issues
+    
         except Exception as e:
             print(f"[GitHubProjectsFetcher] Error fetching issues for {repo}: {e}")
             return []
