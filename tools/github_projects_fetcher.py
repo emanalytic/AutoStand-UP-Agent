@@ -57,6 +57,7 @@ class GitHubProjectsFetcher:
         all_issues = []
 
         for repo in repos:
+            print(repo)
             repo_name = repo["name"]
             issues = self._fetch_repo_issues(self.organization, repo_name, since)
             # Add repository context to each issue
@@ -72,6 +73,7 @@ class GitHubProjectsFetcher:
         try:
             response = requests.get(url, headers=self.headers, params={"per_page": 100})
             response.raise_for_status()
+            print(response.json())
             return response.json()
         except Exception as e:
             print(f"[GitHubProjectsFetcher] Error fetching repos: {e}")
@@ -81,7 +83,7 @@ class GitHubProjectsFetcher:
         """Fetch issues from a specific repository."""
         url = f"https://api.github.com/repos/{owner}/{repo}/issues"
         params = {
-            "since": since.isoformat(),
+            #"since": since.isoformat(),
             "state": "all",  # Include both open and closed issues
             "per_page": 100,
             "sort": "updated",
@@ -93,8 +95,13 @@ class GitHubProjectsFetcher:
             response.raise_for_status()
             raw_issues = response.json()
 
+            print(resopnse)
+            print(raw_issues)
+
             issues = []
             for issue in raw_issues:
+
+                print(issue)
                 # Skip pull requests (they appear in issues API but have pull_request field)
                 if "pull_request" in issue:
                     continue
