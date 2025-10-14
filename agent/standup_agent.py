@@ -3,11 +3,13 @@ from tools.teams_poster import TeamsPoster
 from tools.whatsapp_poster import WhatsAppPoster
 from tools.github_fetcher import GitHubFetcher
 from tools.notion_fetcher import NotionFetcher
+from tools.github_projects_fetcher import GitHubProjectsFetcher
 from config import Config
 from llm_providers.factory import create_llm_provider
 import os
 import time
 import json
+import pprint
 from datetime import datetime
 
 config = Config()
@@ -16,8 +18,28 @@ member_info = config.get_section("members")
 class AutoStandupAgent:
     def __init__(self):
         self.github_fetcher = GitHubFetcher()
-        self.notion_fetcher = NotionFetcher()
-        self.slack_poster = SlackPoster()        
+        
+        # Determine data source for tasks - either Notion or GitHub Projects
+        self.data_source = config.get('settings', 'data_source', fallback='notion').lower()
+        
+        try:
+            if self.data_source == 'notion':
+                self.task_fetcher = NotionFetcher()
+            elif self.data_source == 'github_projects':
+                self.task_fetcher = GitHubProjectsFetcher()
+            else:
+                print(f"Warning: Unknown data source '{self.data_source}'. Defaulting to Notion.")
+                self.task_fetcher = NotionFetcher()
+        except Exception as e:
+            print(f"Warning: Could not initialize {self.data_source} fetcher: {e}")
+            print("Falling back to GitHub Projects fetcher.")
+            try:
+                self.task_fetcher = GitHubProjectsFetcher()
+                self.data_source = 'github_projects'
+            except Exception as e2:
+                print(f"Warning: Could not initialize GitHub Projects fetcher either: {e2}")
+                raise ValueError("Could not initialize any task data source. Please check your configuration and credentials.")
+            
         # Get LLM provider settings from config
         self.llm_provider_type = config.get('settings', 'llm_provider', fallback='groq')
         
@@ -56,16 +78,27 @@ class AutoStandupAgent:
 
     def run(self):
         github_data = self.github_fetcher.fetch_activity()
-        notion_data = self.notion_fetcher.fetch_tasks()
-
+        print("GitHub Data:")
+        pprint.pprint(github_data)  # pretty print
+    
+        if self.data_source == 'github_projects':
+            task_data = self.task_fetcher.fetch_issues()
+        else:
+            task_data = self.task_fetcher.fetch_tasks()
+    
+        print("Task Data:")
+        pprint.pprint(task_data)  # pretty print
+    
         standup_report = {
             "github": github_data,
-            "notion": notion_data
+            "tasks": task_data,
+            "data_source": self.data_source
         }
-
+        print("Standup Report:")
+        pprint.pprint(standup_report)  # pretty print
+    
         formatted_standup = self._format_standup(standup_report)
-        
-        # Post to all configured platforms
+    
         success_count = 0
         for platform_name, poster in self.posters:
             try:
@@ -74,14 +107,15 @@ class AutoStandupAgent:
                 success_count += 1
             except Exception as e:
                 print(f"Failed to post to {platform_name}: {e}")
-        
+    
         if success_count == 0:
             raise Exception("Failed to post standup to any platform")
-        
+    
         return formatted_standup
 
     def _format_standup(self, standup_report):
-
+        data_source = standup_report.get("data_source", "notion")
+        task_label = "GitHub Projects Issues" if data_source == "github_projects" else "Notion Tasks"
 
         today_date = datetime.now().strftime("%d/%m/%Y")
         
@@ -106,6 +140,7 @@ class AutoStandupAgent:
                 "content": (
                     f"member_info = {json.dumps(member_info)}\n\n"
                     f"Input JSON = {json.dumps(standup_report)}\n\n"
+                    f"Data source for tasks: {task_label}\n\n"
                     f"Create a Slack-formatted daily stand-up message structured as follows:\n\n"
                     f"*Daily Stand-up Report — _{today_date}_*\n\n"
                     "For each team member, format their update like this:\n"
