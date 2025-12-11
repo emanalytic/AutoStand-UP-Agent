@@ -11,7 +11,6 @@ A lightweight agent that pulls activity from GitHub and Notion, summarizes each 
 4. **Formats and sends messages to Slack** in a simple, readable format.
 
 
-
 ## How It Works
 
 The agent runs automatically via GitHub Actions (or can be run manually). Here’s the flow:
